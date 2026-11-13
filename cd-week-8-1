@@ -1,0 +1,111 @@
+
+#include <iostream>
+#include <string>
+#include <vector>
+#include <cctype>
+using namespace std;
+
+int main()
+{
+    string s, lhs, token;
+    vector<string> opd;
+    vector<char> op;
+    int t = 1;
+
+    cout << "Enter expression (e.g. a=b+c*d-e): ";
+    getline(cin, s);
+
+    // Separate LHS and RHS
+    int pos = s.find('=');
+
+    if (pos == string::npos)
+    {
+        cout << "Invalid expression";
+        return 0;
+    }
+
+    lhs = s.substr(0, pos);
+    string rhs = s.substr(pos + 1);
+
+    // Split operands and operators
+    for (int i = 0; i < rhs.length();)
+    {
+        if (isspace(rhs[i]))
+        {
+            i++;
+            continue;
+        }
+
+        if (isalnum(rhs[i]) || rhs[i] == '_')
+        {
+            token = "";
+
+            while (i < rhs.length() &&
+                  (isalnum(rhs[i]) || rhs[i] == '_'))
+            {
+                token += rhs[i];
+                i++;
+            }
+
+            opd.push_back(token);
+        }
+        else if (rhs[i] == '+' || rhs[i] == '-' ||
+                 rhs[i] == '*' || rhs[i] == '/')
+        {
+            op.push_back(rhs[i]);
+            i++;
+        }
+        else
+        {
+            cout << "Invalid expression";
+            return 0;
+        }
+    }
+
+    if (opd.size() != op.size() + 1)
+    {
+        cout << "Invalid expression";
+        return 0;
+    }
+
+    // Pass 1: Handle multiplication and division
+    for (int i = 0; i < op.size();)
+    {
+        if (op[i] == '*' || op[i] == '/')
+        {
+            cout << "t" << t << " = "
+                 << opd[i] << " " << op[i] << " "
+                 << opd[i + 1] << endl;
+
+            opd[i] = "t" + to_string(t);
+
+            t++;
+
+            opd.erase(opd.begin() + i + 1);
+            op.erase(op.begin() + i);
+        }
+        else
+        {
+            i++;
+        }
+    }
+
+    // Pass 2: Handle addition and subtraction
+    string result = opd[0];
+
+    for (int i = 0; i < op.size(); i++)
+    {
+        cout << "t" << t << " = "
+             << result << " " << op[i] << " "
+             << opd[i + 1] << endl;
+
+        result = "t" + to_string(t);
+        t++;
+    }
+
+    // Final assignment
+    cout << lhs << " = " << result << endl;
+
+    return 0;
+}
+
