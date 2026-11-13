@@ -1,0 +1,158 @@
+
+#include <iostream>
+#include <string>
+using namespace std;
+
+// 1. Character Stuffing
+string characterStuffing(string data)
+{
+    string stuffed = "DLE STX ";
+
+    for (int i = 0; i < data.length(); i++)
+    {
+        if (data.substr(i, 3) == "DLE")
+        {
+            stuffed += "DLE DLE ";
+            i += 2;
+        }
+        else
+        {
+            stuffed += data[i];
+        }
+    }
+
+    stuffed += " DLE ETX";
+    return stuffed;
+}
+
+// 2. Character Destuffing
+string characterDestuffing(string data)
+{
+    string destuffed = "";
+
+    // Remove starting DLE STX
+    int start = data.find("DLE STX");
+    if (start != string::npos)
+        data = data.substr(start + 8);
+
+    // Remove ending DLE ETX
+    int end = data.rfind(" DLE ETX");
+    if (end != string::npos)
+        data = data.substr(0, end);
+
+    // Remove extra DLE
+    for (int i = 0; i < data.length(); i++)
+    {
+        if (data.substr(i, 8) == "DLE DLE ")
+        {
+            destuffed += "DLE";
+            i += 7;
+        }
+        else
+        {
+            destuffed += data[i];
+        }
+    }
+
+    return destuffed;
+}
+
+// 3. Bit Stuffing
+string bitStuffing(string data)
+{
+    string stuffed = "";
+    int count = 0;
+
+    for (int i = 0; i < data.length(); i++)
+    {
+        stuffed += data[i];
+
+        if (data[i] == '1')
+        {
+            count++;
+
+            if (count == 5)
+            {
+                stuffed += '0';
+                count = 0;
+            }
+        }
+        else
+        {
+            count = 0;
+        }
+    }
+
+    return stuffed;
+}
+
+// 4. Bit Destuffing
+string bitDestuffing(string data)
+{
+    string destuffed = "";
+    int count = 0;
+
+    for (int i = 0; i < data.length(); i++)
+    {
+        if (data[i] == '1')
+        {
+            destuffed += '1';
+            count++;
+
+            if (count == 5)
+            {
+                i++; // Skip stuffed 0
+                count = 0;
+            }
+        }
+        else
+        {
+            destuffed += '0';
+            count = 0;
+        }
+    }
+
+    return destuffed;
+}
+
+int main()
+{
+    string data, cdata, cstuffed, cdestuffed;
+    string bdata, bstuffed, bdestuffed;
+
+    // 1. Character Count
+    cout << "Enter data for Character Count: ";
+    getline(cin, data);
+
+    cout << "\n--- Character Count ---\n";
+    cout << "Frame: " << data.length() << " " << data << endl;
+
+    // 2. Character Stuffing
+    cout << "\nEnter data for Character Stuffing: ";
+    getline(cin, cdata);
+
+    cstuffed = characterStuffing(cdata);
+
+    cout << "\n--- Character Stuffing ---\n";
+    cout << "Stuffed Data: " << cstuffed << endl;
+
+    cdestuffed = characterDestuffing(cstuffed);
+
+    cout << "Destuffed Data: " << cdestuffed << endl;
+
+    // 3. Bit Stuffing
+    cout << "\nEnter binary data: ";
+    cin >> bdata;
+
+    bstuffed = bitStuffing(bdata);
+
+    cout << "\n--- Bit Stuffing ---\n";
+    cout << "Stuffed Data: 01111110" << bstuffed << "01111110" << endl;
+
+    // 4. Bit Destuffing
+    bdestuffed = bitDestuffing(bstuffed);
+
+    cout << "Destuffed Data: " << bdestuffed << endl;
+
+    return 0;
+}
