@@ -1,0 +1,172 @@
+
+#include <iostream>
+#include <stack>
+#include <string>
+#include <cctype>
+using namespace std;
+
+struct Node
+{
+    char data;
+    Node *left, *right;
+};
+
+int reg = 0;
+
+// Create a node
+Node* create(char data, Node *l, Node *r)
+{
+    Node *n = new Node;
+
+    n->data = data;
+    n->left = l;
+    n->right = r;
+
+    return n;
+}
+
+// Operator precedence
+int precedence(char op)
+{
+    if (op == '*' || op == '/')
+        return 2;
+
+    if (op == '+' || op == '-')
+        return 1;
+
+    return 0;
+}
+
+// Generate AST from expression
+Node* buildAST(string s)
+{
+    stack<Node*> nodes;
+    stack<char> ops;
+
+    for (int i = 0; i < s.length(); i++)
+    {
+        if (isspace(s[i]))
+            continue;
+
+        // Operand
+        if (isalnum(s[i]))
+        {
+            nodes.push(create(s[i], NULL, NULL));
+        }
+
+        // Opening parenthesis
+        else if (s[i] == '(')
+        {
+            ops.push(s[i]);
+        }
+
+        // Closing parenthesis
+        else if (s[i] == ')')
+        {
+            while (!ops.empty() && ops.top() != '(')
+            {
+                char op = ops.top();
+                ops.pop();
+
+                Node *r = nodes.top();
+                nodes.pop();
+
+                Node *l = nodes.top();
+                nodes.pop();
+
+                nodes.push(create(op, l, r));
+            }
+
+            ops.pop();
+        }
+
+        // Operators
+        else
+        {
+            while (!ops.empty() && ops.top() != '(' &&
+                   precedence(ops.top()) >= precedence(s[i]))
+            {
+                char op = ops.top();
+                ops.pop();
+
+                Node *r = nodes.top();
+                nodes.pop();
+
+                Node *l = nodes.top();
+                nodes.pop();
+
+                nodes.push(create(op, l, r));
+            }
+
+            ops.push(s[i]);
+        }
+    }
+
+    // Process remaining operators
+    while (!ops.empty())
+    {
+        char op = ops.top();
+        ops.pop();
+
+        Node *r = nodes.top();
+        nodes.pop();
+
+        Node *l = nodes.top();
+        nodes.pop();
+
+        nodes.push(create(op, l, r));
+    }
+
+    return nodes.top();
+}
+
+// Generate machine instructions
+int generate(Node *root)
+{
+    int r1, r2;
+
+    // Leaf node
+    if (root->left == NULL && root->right == NULL)
+    {
+        r1 = ++reg;
+        cout << "LD R" << r1 << ", " << root->data << endl;
+        return r1;
+    }
+
+    // Generate code for children
+    r1 = generate(root->left);
+    r2 = generate(root->right);
+
+    // Generate machine instructions
+    if (root->data == '+')
+        cout << "ADD R" << r1 << ", R" << r1 << ", R" << r2 << endl;
+
+    else if (root->data == '-')
+        cout << "SUB R" << r1 << ", R" << r1 << ", R" << r2 << endl;
+
+    else if (root->data == '*')
+        cout << "MUL R" << r1 << ", R" << r1 << ", R" << r2 << endl;
+
+    else if (root->data == '/')
+        cout << "DIV R" << r1 << ", R" << r1 << ", R" << r2 << endl;
+
+    return r1;
+}
+
+int main()
+{
+    string s;
+
+    cout << "Enter expression: ";
+    cin >> s;
+
+    Node *root = buildAST(s);
+
+    cout << "\nMachine Instructions:\n";
+
+    int result = generate(root);
+
+    cout << "ST result, R" << result << endl;
+
+    return 0;
+}
