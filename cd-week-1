@@ -1,0 +1,185 @@
+
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <cctype>
+using namespace std;
+
+#define MAX 20
+
+// Check whether a word is a keyword
+int isKeyword(string word)
+{
+    string keywords[] = {
+        "int", "float", "char", "if", "else",
+        "while", "for", "return", "void"
+    };
+
+    for (int i = 0; i < 9; i++)
+    {
+        if (word == keywords[i])
+            return 1;
+    }
+
+    return 0;
+}
+
+int main()
+{
+    ifstream fin;
+    string filename, token;
+    char ch, next;
+    bool tooLong;
+
+    cout << "Enter input file name: ";
+    cin >> filename;
+
+    fin.open(filename);
+
+    if (!fin)
+    {
+        cout << "File cannot be opened.\n";
+        return 0;
+    }
+
+    cout << "\nTokens:\n";
+
+    while (fin.get(ch))
+    {
+        // Ignore spaces, tabs and newlines
+        if (isspace(ch))
+            continue;
+
+        // Comments and division operator
+        if (ch == '/')
+        {
+            next = fin.peek();
+
+            // Single-line comment
+            if (next == '/')
+            {
+                fin.get(next);
+
+                while (fin.get(ch) && ch != '\n')
+                    ;
+
+                continue;
+            }
+
+            // Multi-line comment
+            if (next == '*')
+            {
+                fin.get(next);
+                char prev = '\0';
+
+                while (fin.get(ch))
+                {
+                    if (prev == '*' && ch == '/')
+                        break;
+
+                    prev = ch;
+                }
+
+                continue;
+            }
+
+            cout << "Operator: /\n";
+            continue;
+        }
+
+        // Keyword or Identifier
+        if (isalpha(ch) || ch == '_')
+        {
+            token = "";
+            tooLong = false;
+
+            do
+            {
+                if (token.length() < MAX)
+                    token += ch;
+                else
+                    tooLong = true;
+
+                if (!isalnum(fin.peek()) && fin.peek() != '_')
+                    break;
+
+            } while (fin.get(ch));
+
+            if (tooLong)
+                cout << "Error: Identifier too long\n";
+            else if (isKeyword(token))
+                cout << "Keyword: " << token << endl;
+            else
+                cout << "Identifier: " << token << endl;
+
+            continue;
+        }
+
+        // Number
+        if (isdigit(ch))
+        {
+            token = "";
+            bool dot = false;
+
+            token += ch;
+
+            while (isdigit(fin.peek()) || (fin.peek() == '.' && !dot))
+            {
+                fin.get(ch);
+
+                if (ch == '.')
+                    dot = true;
+
+                token += ch;
+            }
+
+            cout << "Number: " << token << endl;
+            continue;
+        }
+
+        // Operators
+        if (ch == '+' || ch == '-' || ch == '=' ||
+            ch == '<' || ch == '>' || ch == '!')
+        {
+            next = fin.peek();
+
+            if ((ch == '+' && next == '+') ||
+                (ch == '-' && next == '-') ||
+                (ch == '=' && next == '=') ||
+                (ch == '<' && next == '=') ||
+                (ch == '>' && next == '=') ||
+                (ch == '!' && next == '='))
+            {
+                fin.get(next);
+                cout << "Operator: " << ch << next << endl;
+            }
+            else
+                cout << "Operator: " << ch << endl;
+
+            continue;
+        }
+
+        // Single-character operators
+        if (ch == '*' || ch == '%')
+        {
+            cout << "Operator: " << ch << endl;
+            continue;
+        }
+
+        // Special symbols
+        if (ch == ';' || ch == ',' || ch == '(' ||
+            ch == ')' || ch == '{' || ch == '}' ||
+            ch == '[' || ch == ']')
+        {
+            cout << "Symbol: " << ch << endl;
+            continue;
+        }
+
+        // Unknown character
+        cout << "Unknown: " << ch << endl;
+    }
+
+    fin.close();
+
+    return 0;
+}
