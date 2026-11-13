@@ -1,0 +1,112 @@
+
+#include <iostream>
+#include <string>
+using namespace std;
+
+string toBinary(string s)
+{
+    string bin = "";
+
+    for (char c : s)
+    {
+        for (int i = 7; i >= 0; i--)
+            bin += ((c >> i) & 1) ? '1' : '0';
+    }
+
+    return bin;
+}
+
+// CRC Calculation
+string calculateCRC(string data, string poly)
+{
+    int n = poly.length();
+    string temp = data + string(n - 1, '0');
+
+    for (int i = 0; i <= temp.length() - n; i++)
+    {
+        if (temp[i] == '1')
+        {
+            for (int j = 0; j < n; j++)
+            {
+                if (temp[i + j] == poly[j])
+                    temp[i + j] = '0';
+                else
+                    temp[i + j] = '1';
+            }
+        }
+    }
+
+    return temp.substr(temp.length() - n + 1);
+}
+
+// Receiver Verification
+bool verifyCRC(string data, string poly)
+{
+    int n = poly.length();
+
+    for (int i = 0; i <= data.length() - n; i++)
+    {
+        if (data[i] == '1')
+        {
+            for (int j = 0; j < n; j++)
+            {
+                if (data[i + j] == poly[j])
+                    data[i + j] = '0';
+                else
+                    data[i + j] = '1';
+            }
+        }
+    }
+
+    string rem = data.substr(data.length() - n + 1);
+
+    return rem == string(n - 1, '0');
+}
+
+int main()
+{
+    string str;
+
+    cout << "Enter a string: ";
+    cin >> str;
+
+    string data = toBinary(str);
+
+    cout << "\nBinary Data: " << data << endl;
+
+    string crc12 = "1100000001111";
+    string crc16 = "11000000000000101";
+    string ccitt = "10001000000100001";
+
+    string r12 = calculateCRC(data, crc12);
+    string r16 = calculateCRC(data, crc16);
+    string rccitt = calculateCRC(data, ccitt);
+
+    cout << "\nCRC-12   : " << r12;
+    cout << "\nCRC-16   : " << r16;
+    cout << "\nCRC-CCITT: " << rccitt;
+
+    cout << "\n\nTransmitted Data:";
+
+    string t12 = data + r12;
+    string t16 = data + r16;
+    string tccitt = data + rccitt;
+
+    cout << "\nCRC-12   : " << t12;
+    cout << "\nCRC-16   : " << t16;
+    cout << "\nCRC-CCITT: " << tccitt;
+
+    // Receiver Verification
+    cout << "\n\nReceiver Verification:";
+
+    cout << "\nCRC-12   : "
+         << (verifyCRC(t12, crc12) ? "No Error" : "Error Detected");
+
+    cout << "\nCRC-16   : "
+         << (verifyCRC(t16, crc16) ? "No Error" : "Error Detected");
+
+    cout << "\nCRC-CCITT: "
+         << (verifyCRC(tccitt, ccitt) ? "No Error" : "Error Detected");
+
+    return 0;
+}
