@@ -1,0 +1,169 @@
+
+#include <iostream>
+#include <string>
+#include <vector>
+#include <iomanip>
+using namespace std;
+
+// 1. Hexadecimal Character Stuffing
+vector<int> characterStuffing(vector<int> data)
+{
+    vector<int> stuffed;
+
+    for (int b : data)
+    {
+        if (b == 0x7E || b == 0x7D)
+        {
+            stuffed.push_back(0x7D);
+            stuffed.push_back(b ^ 0x20);
+        }
+        else
+        {
+            stuffed.push_back(b);
+        }
+    }
+
+    return stuffed;
+}
+
+// 2. Character Destuffing
+vector<int> characterDestuffing(vector<int> data)
+{
+    vector<int> destuffed;
+
+    for (int i = 0; i < data.size(); i++)
+    {
+        if (data[i] == 0x7D)
+        {
+            i++;
+            destuffed.push_back(data[i] ^ 0x20);
+        }
+        else
+        {
+            destuffed.push_back(data[i]);
+        }
+    }
+
+    return destuffed;
+}
+
+// Display hexadecimal data
+void display(vector<int> data)
+{
+    for (int b : data)
+        cout << hex << uppercase << setw(2)
+             << setfill('0') << b << " ";
+
+    cout << dec << endl;
+}
+
+// 3. Bit Stuffing
+string bitStuffing(string data)
+{
+    string stuffed = "";
+    int count = 0;
+
+    for (int i = 0; i < data.length(); i++)
+    {
+        stuffed += data[i];
+
+        if (data[i] == '1')
+        {
+            count++;
+
+            if (count == 5)
+            {
+                stuffed += '0';
+                count = 0;
+            }
+        }
+        else
+        {
+            count = 0;
+        }
+    }
+
+    return stuffed;
+}
+
+// 4. Bit Destuffing
+string bitDestuffing(string data)
+{
+    string destuffed = "";
+    int count = 0;
+
+    for (int i = 0; i < data.length(); i++)
+    {
+        if (data[i] == '1')
+        {
+            destuffed += '1';
+            count++;
+
+            if (count == 5)
+            {
+                i++;
+                count = 0;
+            }
+        }
+        else
+        {
+            destuffed += '0';
+            count = 0;
+        }
+    }
+
+    return destuffed;
+}
+
+int main()
+{
+    string data, bdata;
+    vector<int> cdata, cstuffed, cdestuffed;
+    int n, b;
+
+    // 1. Character Count
+    cout << "Enter data for Character Count: ";
+    getline(cin, data);
+
+    cout << "\n--- Character Count ---\n";
+    cout << "Frame: " << data.length() << " " << data << endl;
+
+    // 2. Character Stuffing
+    cout << "\nEnter number of hexadecimal bytes: ";
+    cin >> n;
+
+    cout << "Enter hexadecimal data (example: 01 7E 02 7D): ";
+
+    for (int i = 0; i < n; i++)
+    {
+        cin >> hex >> b;
+        cdata.push_back(b);
+    }
+
+    cstuffed = characterStuffing(cdata);
+
+    cout << "\n--- Character Stuffing ---\n";
+    cout << "Stuffed Data: 7E ";
+    display(cstuffed);
+    
+    cout << "Destuffed Data: ";
+    cdestuffed = characterDestuffing(cstuffed);
+    display(cdestuffed);
+
+    // 3. Bit Stuffing
+    cout << "\nEnter binary data: ";
+    cin >> bdata;
+
+    string bstuffed = bitStuffing(bdata);
+
+    cout << "\n--- Bit Stuffing ---\n";
+    cout << "Stuffed Data: 01111110"
+         << bstuffed << "01111110" << endl;
+
+    // 4. Bit Destuffing
+    string bdestuffed = bitDestuffing(bstuffed);
+
+    cout << "Destuffed Data: " << bdestuffed << endl;
+
+    return 0;
+}
